@@ -22,7 +22,10 @@ void main() async{
 
   await NotificationService.requestPermission();
 
-  await initializeBackgroundService();
+  Future.delayed(const Duration(milliseconds: 500), () async {
+     await initializeBackgroundService();
+  });
+  
 
 
   // 1. Fetch saved theme explicitly as a bool?
