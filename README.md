@@ -35,7 +35,7 @@ Geofence monitoring continues running using background services even when the ap
 The hardware prototype consists of an **ESP32 microcontroller** connected to a **NEO-6M GPS module**.  
 The ESP32 reads GPS telemetry via UART communication and sends location updates to Firebase over Wi-Fi.
 
-![Hardware Prototype](assets/hardware_prototype.png)
+![Hardware Prototype](assets/images/hardware_prototype.jpg)
 
 ### Components
 
