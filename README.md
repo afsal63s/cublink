@@ -1,93 +1,164 @@
-# 🐻 Cublink - Smart Student Safety Ecosystem
+# Cublink – Smart Student Safety Ecosystem
 
-Cublink is a comprehensive, full-stack IoT safety ecosystem designed to monitor and protect students in real-time. Developed as an academic project, it bridges custom hardware (ESP32 & GPS) with a highly responsive, cross-platform Flutter application via the Firebase Realtime Database.
+Cublink is a full-stack IoT safety ecosystem designed to monitor and protect students through real-time location tracking and automated boundary monitoring.
 
----
+The system integrates custom hardware (ESP32 with GPS telemetry) with a responsive cross-platform Flutter application using Firebase as the cloud synchronization layer.
 
-## ✨ Key Features
-
-* **📍 Live Telemetry Tracking:** Real-time GPS plotting using custom CartoDB map tiles and OpenStreetMap data.
-* **🛡️ Dynamic Geofencing:** Draw custom safe zones (e.g., School, Home). The app calculates live distances and triggers instant push notifications if a boundary is breached.
-* **🩺 Hardware Heartbeat Monitor:** Built-in "Doctor" logic checks the ESP32 connection every few seconds. If the ID card loses power or signal, the parent is immediately alerted.
-* **🌙 Premium Theme Engine:** Fully custom Light/Dark mode built from scratch, persistently saved to local device memory.
-* **🔒 The "Bouncer" Security:** Custom session management ensuring single-device login integrity.
-* **🏃 Background Services:** Continuous offline tracking and geofence monitoring even when the app is completely closed.
+Developed as a final-year Computer Science project, Cublink demonstrates how embedded hardware, cloud infrastructure, and mobile applications can work together to create a scalable safety monitoring system.
 
 ---
 
-## 🛠️ Tech Stack
+# Key Features
 
-### Frontend (Mobile App)
-* **Framework:** Flutter (Dart)
-* **Architecture:** Provider (MVVM-inspired)
-* **Maps & Navigation:** `flutter_map`, `latlong2`, `geocoding`
-* **Local Storage:** `shared_preferences`
+### Real-Time Location Tracking
+Live GPS telemetry is streamed from the ESP32 hardware module and visualized on an interactive map using OpenStreetMap and CartoDB tiles.
 
-### Backend (Cloud Services)
-* **Database:** Firebase Realtime Database (NoSQL)
-* **Authentication:** Firebase Auth (Email/Password)
-* **Storage:** Firebase Cloud Storage (Profile Images)
-* **Push Notifications:** `flutter_local_notifications`, `flutter_background_service`
+### Dynamic Geofencing
+Parents can define circular safe zones such as home or school. The system calculates the distance between the student and the geofence center using the **Haversine Formula**, triggering alerts when boundaries are crossed.
 
-### Hardware (Smart ID Card)
-* **Microcontroller:** ESP32 MCU
-* **GPS Module:** NEO-8M GPS with UART interface
+### Hardware Heartbeat Monitoring
+The application monitors the ESP32's last communication timestamp. If the device stops transmitting data due to power loss or network issues, an alert is immediately generated.
 
----
+### Custom Theme Engine
+A fully custom light/dark theme engine adapts to system brightness and saves user preferences locally.
 
-## 🏗️ System Architecture
+### Secure Session Management
+Custom session validation prevents simultaneous logins from multiple devices.
 
-The architecture follows a classic IoT triad, cleanly separating hardware payloads, cloud synchronization, and mobile UI rendering:
-
-### 1. Hardware Layer
-The ESP32 extracts raw NMEA data from the NEO-8M module, parses the latitude/longitude, and securely pushes the payload to Firebase over Wi-Fi.
-
-### 2. Cloud Layer
-A Firebase Realtime Database acts as the central synchronization hub, storing user-centric JSON nodes for locations, geofences, and alerts.
-
-### 3. 🧠 State Management (Provider)
-To ensure high performance and clean code, the app strictly separates business logic from the UI using the **Provider** package:
-* **`GeofenceProvider`:** Handles complex distance math, syncs active zones with the database, and prevents memory leaks by managing active stream subscriptions.
-* **`StudentProvider`:** Manages user profiles, image uploads to Firebase Storage, and secure data caching.
-* **`ThemeProvider`:** Intelligently checks the host device's native brightness settings and saves user-overrides to the phone's local storage.
+### Background Monitoring
+Geofence monitoring continues running using background services even when the application is closed.
 
 ---
 
-## 🚀 Getting Started (For Developers)
+# Hardware Prototype
 
-To run this project locally, you will need to connect your own Firebase instance, as API keys are secured and hidden from this repository.
+The hardware prototype consists of an **ESP32 microcontroller** connected to a **NEO-6M GPS module**.  
+The ESP32 reads GPS telemetry via UART communication and sends location updates to Firebase over Wi-Fi.
 
-### Prerequisites
-* Flutter SDK (v3.0.0+)
-* A Firebase Account
+![Hardware Prototype](assets/hardware_prototype.png)
 
-### Installation
-1.  **Clone the repository:**
-    ```bash
-    git clone [https://github.com/yourusername/cublink.git](https://github.com/yourusername/cublink.git)
-    cd cublink
-    ```
-2.  **Install dependencies:**
-    ```bash
-    flutter pub get
-    ```
-3.  **Setup Firebase:**
-    * Create a new project in the Firebase Console.
-    * Enable Realtime Database, Authentication, and Storage.
-    * Run `flutterfire configure` to generate your `firebase_options.dart` file.
-4.  **Run the app:**
-    ```bash
-    flutter run
-    ```
+### Components
+
+**ESP32 DevKit V1**
+- Main microcontroller
+- Handles Wi-Fi communication
+- Processes GPS telemetry
+
+**NEO-6M GPS Module**
+- Provides real-time latitude and longitude
+- Communicates with ESP32 using UART
+
+**External GPS Antenna**
+- Improves satellite signal reception
+- Enables accurate outdoor positioning
 
 ---
 
-## 📱 Download the App
+# Hardware Communication
 
-Want to test the UI and features? Download the compiled Android APK from the [Releases Page](link_to_your_releases_page_here).
+| GPS Module | ESP32 |
+|-------------|------|
+| VCC | 3.3V |
+| GND | GND |
+| TX | RX |
+| RX | TX |
+
+The ESP32 parses NMEA GPS sentences and sends structured JSON location data to Firebase.
 
 ---
 
-## 👨‍💻 Author
+# Tech Stack
 
-**Afsal** *Final-Year B.Sc. Computer Science Project*
+## Mobile Application
+- Flutter (Dart)
+- Provider state management
+- flutter_map
+- latlong2
+- geocoding
+- shared_preferences
+
+## Cloud Infrastructure
+- Firebase Realtime Database
+- Firebase Authentication
+- Firebase Cloud Storage
+- flutter_local_notifications
+
+## Hardware
+- ESP32 DevKit V1
+- NEO-6M GPS Module
+- Wi-Fi communication
+
+---
+
+# System Architecture
+
+```
+GPS Module
+     ↓
+ESP32 Microcontroller
+     ↓
+Wi-Fi Transmission
+     ↓
+Firebase Realtime Database
+     ↓
+Flutter Mobile Application
+```
+
+---
+
+# Running the Project
+
+To run the project locally, you must connect your own Firebase project.
+
+## Prerequisites
+
+- Flutter SDK (3.0+)
+- Firebase account
+
+---
+
+## Installation
+
+Clone the repository
+
+```bash
+git clone https://github.com/afsal63s/cublink.git
+cd cublink
+```
+
+Install dependencies
+
+```bash
+flutter pub get
+```
+
+Configure Firebase
+
+1. Create a Firebase project
+2. Enable Realtime Database, Authentication, and Storage
+3. Run
+
+```bash
+flutterfire configure
+```
+
+Run the application
+
+```bash
+flutter run
+```
+
+---
+
+# Download
+
+Download the Android APK from the releases page:
+
+https://github.com/afsal63s/cublink/releases
+
+---
+
+# Author
+
+Afsal Salim  
+
