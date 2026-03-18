@@ -3,6 +3,7 @@ import 'package:cublink/firebase_options.dart';
 import 'package:cublink/providers/geofence_provider.dart';
 import 'package:cublink/providers/student_provider.dart';
 import 'package:cublink/providers/theme_provider.dart';
+import 'package:cublink/screens/splash_screen.dart';
 import 'package:cublink/services/background_service.dart';
 import 'package:cublink/services/notification_service.dart';
 import 'package:flutter/services.dart';
@@ -59,7 +60,7 @@ class CubLink extends StatelessWidget {
           theme: AppThemes.lightTheme,
           darkTheme: AppThemes.darkTheme,
           
-          home: AuthWrapper()
+          home: SplashScreen()
         );
       }
     );

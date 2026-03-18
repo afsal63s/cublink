@@ -99,8 +99,14 @@ flutter:
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
 flutter_native_splash:
-  color: "#DFFBF6"
-  image: assets/images/main_logo.png
+  color: "#E0F2F1" 
+  color_dark: "#121A18" 
+  android: true
+  ios: true
+  
   android_12:
-    image: assets/images/main_logo.png
-    icon_background_color: "#DFFBF6"
+    color: "#E0F2F1"
+    color_dark: "#121A18"
+    # 🔥 Android thinks it's showing a logo, but it's just matching background paint!
+    image: "assets/images/light_blank.png"
+    image_dark: "assets/images/dark_blank.png"

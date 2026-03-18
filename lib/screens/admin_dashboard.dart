@@ -8,8 +8,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:cublink/screens/login_screen.dart';
 import 'package:cublink/widgets/background_wave_painter.dart'; 
-import 'package:provider/provider.dart'; // 🔥 NEEDED FOR THEME
-import 'package:cublink/providers/theme_provider.dart'; // 🔥 NEEDED FOR THEME
 
 class AdminDashboard extends StatefulWidget {
   const AdminDashboard({super.key});
@@ -38,6 +36,9 @@ class _AdminDashboardState extends State<AdminDashboard> {
   bool _isFirstLocationLoad = true; 
   DateTime? _lastDataTime;
   Timer? _checkConnectionTimer;
+
+  // Local Theme State for Admin (Does not save to SharedPreferences)
+  bool _isAdminDark = true;
 
   final Color _safeColor = const Color(0xFF1A9E75);
   final Color _dangerColor = const Color(0xFFE53935);
@@ -146,40 +147,65 @@ class _AdminDashboardState extends State<AdminDashboard> {
     }
   }
 
-  Future<void> _showLogoutDialog() async {
-    return showDialog<void>(
+  // ============================================
+  // THE SAFE LOGOUT DIALOG 🛡️ (Premium Version)
+  // ============================================
+  void _showLogoutConfirmation() {
+    showDialog(
       context: context,
-      barrierDismissible: false, 
-      builder: (BuildContext context) {
+      builder: (BuildContext dialogContext) { 
         return AlertDialog(
-          backgroundColor: Theme.of(context).colorScheme.surface, // DYNAMIC THEME
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: Text(
-            'Confirm Logout', 
-            style: TextStyle(color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.bold)
-          ),
-          content: Text(
-            'Are you sure you want to securely log out of the Admin Control Center?',
-            style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color, fontSize: 15),
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('Cancel', style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
-              onPressed: () {
-                Navigator.of(context).pop(); 
-              },
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFE53935), 
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                elevation: 0,
+          backgroundColor: _isAdminDark ? const Color(0xFF1E2D2A) : Colors.white, 
+          surfaceTintColor: Colors.transparent, 
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)), 
+          contentPadding: const EdgeInsets.all(25),
+          
+          title: Column(
+            children: [
+              const Icon(Icons.logout_rounded, color: Color(0xFF1A9E75), size: 40), 
+              const SizedBox(height: 15),
+              Text(
+                "Log Out?", 
+                style: TextStyle(
+                  fontWeight: FontWeight.bold, 
+                  color: _isAdminDark ? Colors.white : Colors.black87, 
+                  fontSize: 22
+                )
               ),
+            ],
+          ),
+          
+          content: Text(
+            "Are you sure you want to log out of the Admin Control Center?",
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 16, color: _isAdminDark ? Colors.white70 : Colors.grey[700]),
+          ),
+          
+          actionsAlignment: MainAxisAlignment.center, 
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(), 
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 12),
+              ),
+              child: const Text("Cancel", style: TextStyle(color: Colors.grey, fontSize: 16, fontWeight: FontWeight.bold)),
+            ),
+
+            const SizedBox(width: 10),
+
+            ElevatedButton(
               onPressed: () {
-                Navigator.of(context).pop(); 
-                _logout(); 
+                Navigator.of(dialogContext).pop();
+                _logout();
               },
-              child: const Text('Logout', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF5BE2AA), 
+                foregroundColor: Colors.black, 
+                elevation: 0, 
+                padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+              ),
+              child: const Text("Yes, Logout", style: TextStyle(fontWeight: FontWeight.bold)),
             ),
           ],
         );
@@ -192,10 +218,10 @@ class _AdminDashboardState extends State<AdminDashboard> {
     var height = MediaQuery.of(context).size.height;
     var width = MediaQuery.of(context).size.width;
 
-    // 🔥 GRAB THE THEME
-    final themeProvider = context.watch<ThemeProvider>();
-    final isDark = themeProvider.isDarkMode;
-    final textColor = Theme.of(context).textTheme.bodyLarge?.color;
+    // Theme Colors based on local state
+    Color primaryColor = _isAdminDark ? const Color(0xFFD7FBEA) : const Color(0xFF1A9E75);
+    Color surfaceColor = _isAdminDark ? const Color(0xFF1E2D2A) : Colors.white;
+    Color textColor = _isAdminDark ? Colors.white : Colors.black87;
 
     // Admin Status Logic
     String statusTitle;
@@ -232,9 +258,9 @@ class _AdminDashboardState extends State<AdminDashboard> {
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: isDark 
+                colors: _isAdminDark 
                   ? [const Color(0xFF121A18), const Color(0xFF1E2D2A)] 
-                  : [const Color(0xFFD7FBEA), const Color(0xFFE0F2F1)],
+                  : [const Color(0xFFE0F2F1), const Color(0xFFF5F5F5)],
               ),
             ),
           ),
@@ -243,9 +269,9 @@ class _AdminDashboardState extends State<AdminDashboard> {
           Positioned.fill(
             child: CustomPaint(
               painter: BackgroundWavePainter(
-                waveColor: isDark 
+                waveColor: _isAdminDark 
                   ? Colors.white.withOpacity(0.03) 
-                  : Colors.white.withOpacity(0.5),
+                  : Colors.black.withOpacity(0.03),
               ),
             ),
           ),
@@ -254,7 +280,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
           SafeArea(
             child: Column(
               children: [
-                // --- CUSTOM HEADER WITH LOGOUT BUTTON ---
+                // --- CUSTOM HEADER WITH PREMIUM TOGGLE & LOGOUT ---
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                   child: Row(
@@ -265,23 +291,30 @@ class _AdminDashboardState extends State<AdminDashboard> {
                         style: TextStyle(
                           fontSize: 26,
                           fontWeight: FontWeight.bold,
-                          color: Theme.of(context).colorScheme.primary, // DYNAMIC
+                          color: primaryColor,
                         ),
                       ),
-                      ElevatedButton.icon(
-                        onPressed: _showLogoutDialog, 
-                        icon: const Icon(Icons.logout_rounded, size: 18),
-                        label: const Text("Logout", style: TextStyle(fontWeight: FontWeight.bold)),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Theme.of(context).colorScheme.surface, // DYNAMIC
-                          foregroundColor: const Color(0xFFE53935), 
-                          elevation: 2,
-                          shadowColor: Colors.black.withOpacity(isDark ? 0.4 : 0.2),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20)
+                      
+                      Row(
+                        children: [
+                          // 🔥 PREMIUM THEME TOGGLE 
+                          _buildPremiumThemeToggle(),
+                          
+                          const SizedBox(width: 15),
+
+                          // 🛡️ SECURE LOGOUT BUTTON
+                          GestureDetector(
+                            onTap: _showLogoutConfirmation,
+                            child: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: _isAdminDark ? Colors.red.withOpacity(0.15) : Colors.red[50],
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(Icons.logout_rounded, color: Colors.redAccent, size: 22),
+                            ),
                           ),
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8)
-                        ),
+                        ],
                       )
                     ],
                   ),
@@ -297,23 +330,23 @@ class _AdminDashboardState extends State<AdminDashboard> {
                       children: [
                         Text(
                           "SYSTEM HEALTH", 
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: Theme.of(context).colorScheme.primary, letterSpacing: 1.2)
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: primaryColor, letterSpacing: 1.2)
                         ),
                         const SizedBox(height: 15),
                         
                         // STATS ROW
                         Row(
                           children: [
-                            Expanded(child: _buildStatCard(context, "Total Devices", "1", Colors.blue, isDark)),
+                            Expanded(child: _buildStatCard(title: "Total Devices", value: "1", color: Colors.blue, isDark: _isAdminDark, surfaceColor: surfaceColor)),
                             const SizedBox(width: 15),
-                            Expanded(child: _buildStatCard(context, "Active Now", _isOnline ? "1" : "0", _safeColor, isDark)),
+                            Expanded(child: _buildStatCard(title: "Active Now", value: _isOnline ? "1" : "0", color: _safeColor, isDark: _isAdminDark, surfaceColor: surfaceColor)),
                           ],
                         ),
                         const SizedBox(height: 35),
 
                         Text(
                           "LIVE FLEET MAP", 
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: Theme.of(context).colorScheme.primary, letterSpacing: 1.2)
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: primaryColor, letterSpacing: 1.2)
                         ),
                         const SizedBox(height: 15),
 
@@ -321,9 +354,9 @@ class _AdminDashboardState extends State<AdminDashboard> {
                         Container(
                           height: 250,
                           decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.surface, 
+                            color: surfaceColor, 
                             borderRadius: BorderRadius.circular(24),
-                            boxShadow: [BoxShadow(color: Colors.black.withOpacity(isDark ? 0.3 : 0.05), blurRadius: 15, offset: const Offset(0, 5))],
+                            boxShadow: [BoxShadow(color: Colors.black.withOpacity(_isAdminDark ? 0.3 : 0.05), blurRadius: 15, offset: const Offset(0, 5))],
                           ),
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(24),
@@ -339,7 +372,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                                   children: [
                                     TileLayer(
                                       // 🔥 MAGIC THEME MAP TILES!
-                                      urlTemplate: isDark 
+                                      urlTemplate: _isAdminDark 
                                           ? 'https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}.png'
                                           : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png',
                                       subdomains: const ['a', 'b', 'c', 'd'],
@@ -369,7 +402,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                                   child: FloatingActionButton(
                                     mini: true,
                                     heroTag: "adminRecenter",
-                                    backgroundColor: Theme.of(context).colorScheme.surface,
+                                    backgroundColor: surfaceColor,
                                     onPressed: () => _mapController.move(_studentLocation, 16.0),
                                     child: Icon(Icons.my_location, color: textColor),
                                   ),
@@ -382,7 +415,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
 
                         Text(
                           "DEVICE ROSTER", 
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: Theme.of(context).colorScheme.primary, letterSpacing: 1.2)
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: primaryColor, letterSpacing: 1.2)
                         ),
                         const SizedBox(height: 15),
 
@@ -390,9 +423,9 @@ class _AdminDashboardState extends State<AdminDashboard> {
                         Container(
                           padding: const EdgeInsets.all(20),
                           decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.surface, 
+                            color: surfaceColor, 
                             borderRadius: BorderRadius.circular(24),
-                            boxShadow: [BoxShadow(color: Colors.black.withOpacity(isDark ? 0.3 : 0.05), blurRadius: 15, offset: const Offset(0, 5))],
+                            boxShadow: [BoxShadow(color: Colors.black.withOpacity(_isAdminDark ? 0.3 : 0.05), blurRadius: 15, offset: const Offset(0, 5))],
                           ),
                           child: Row(
                             children: [
@@ -415,7 +448,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                                     const SizedBox(height: 4),
                                     Text(
                                       _isOnline || _isSyncing ? _currentAddress : "Last seen: ${_lastDataTime?.hour}:${_lastDataTime?.minute.toString().padLeft(2, '0')}", 
-                                      style: TextStyle(color: isDark ? Colors.white54 : Colors.black54, fontSize: 12, fontWeight: FontWeight.w600),
+                                      style: TextStyle(color: _isAdminDark ? Colors.white54 : Colors.black54, fontSize: 12, fontWeight: FontWeight.w600),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                     ),
@@ -438,12 +471,59 @@ class _AdminDashboardState extends State<AdminDashboard> {
     );
   }
 
-  // Helper for the top stats (Updated to pass context and isDark)
-  Widget _buildStatCard(BuildContext context, String title, String value, Color color, bool isDark) {
+  // --- Helper Widget: Premium Minimal Theme Switcher ---
+  Widget _buildPremiumThemeToggle() {
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _isAdminDark = !_isAdminDark; // Toggles Admin UI Instantly
+        });
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        width: 65,
+        height: 34,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(30),
+          color: _isAdminDark ? const Color(0xFF1A9E75).withOpacity(0.2) : Colors.grey[300],
+          border: Border.all(
+            color: _isAdminDark ? const Color(0xFF5BE2AA).withOpacity(0.5) : Colors.transparent,
+            width: 1.5
+          ),
+        ),
+        child: AnimatedAlign(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOutBack, 
+          alignment: _isAdminDark ? Alignment.centerRight : Alignment.centerLeft,
+          child: Container(
+            margin: const EdgeInsets.all(3),
+            width: 26,
+            height: 26,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: _isAdminDark ? const Color(0xFF5BE2AA) : Colors.white,
+              boxShadow: [
+                if (!_isAdminDark)
+                  BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 4, offset: const Offset(0, 2))
+              ]
+            ),
+            child: Icon(
+              _isAdminDark ? Icons.nightlight_round : Icons.wb_sunny_rounded,
+              size: 16,
+              color: _isAdminDark ? const Color(0xFF121A18) : Colors.orangeAccent,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Helper for the top stats
+  Widget _buildStatCard({required String title, required String value, required Color color, required bool isDark, required Color surfaceColor}) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface, // DYNAMIC
+        color: surfaceColor,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [BoxShadow(color: Colors.black.withOpacity(isDark ? 0.3 : 0.05), blurRadius: 15, offset: const Offset(0, 5))],
       ),
