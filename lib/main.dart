@@ -1,4 +1,3 @@
-import 'package:cublink/auth_wrapper.dart';
 import 'package:cublink/firebase_options.dart';
 import 'package:cublink/providers/geofence_provider.dart';
 import 'package:cublink/providers/student_provider.dart';
@@ -6,10 +5,8 @@ import 'package:cublink/providers/theme_provider.dart';
 import 'package:cublink/screens/splash_screen.dart';
 import 'package:cublink/services/background_service.dart';
 import 'package:cublink/services/notification_service.dart';
-import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -18,7 +15,6 @@ void main() async{
   await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
   );
-
   await NotificationService.init();
 
   await NotificationService.requestPermission();
