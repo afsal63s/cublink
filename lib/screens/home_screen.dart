@@ -4,7 +4,7 @@ import 'package:cublink/widgets/background_wave_painter.dart';
 import 'package:cublink/widgets/side_menu_drawer.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:cublink/providers/theme_provider.dart'; // 🔥 NEEDED FOR THEME
+import 'package:cublink/providers/theme_provider.dart'; 
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -82,25 +82,25 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
 
-                SizedBox(height: height*0.06),
+                const SizedBox(height: 20),
                 
-                Container(
-                  height: height*0.4,
-                  padding: const EdgeInsets.all(20),
-                  child: Image.asset(
-                    'assets/images/girl.png',
-                    fit: BoxFit.contain,
-                    errorBuilder: ((context,error,stack) =>
-                    Icon(Icons.image, size: 80, color: isDark ? Colors.white12 : Colors.black12)),
+                // 🔥 THE FIX: Let the image flex to fit the remaining screen space perfectly
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Image.asset(
+                      'assets/images/girl.png',
+                      fit: BoxFit.contain, 
+                      errorBuilder: ((context,error,stack) =>
+                      Icon(Icons.image, size: 80, color: isDark ? Colors.white12 : Colors.black12)),
+                    ),
                   ),
                 ),
                 
-                const Spacer(),
+                const SizedBox(height: 20),
                 
                 // Pass context to the builder so it can read the theme
                 _buildStudentCard(context, studentData, isDark),
-                
-                const SizedBox(height: 50)
               ],
             )
           )
@@ -111,7 +111,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildStudentCard(BuildContext context, StudentProvider studentData, bool isDark) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 24), 
+      margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 20), 
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface, // DYNAMIC SURFACE
@@ -222,13 +222,13 @@ class _HomeScreenState extends State<HomeScreen> {
 }
 
 class _InfoRow extends StatelessWidget {
-  final BuildContext context; // Pass context to access theme
+  final BuildContext context; 
   final String label;
   final String value;
   const _InfoRow({required this.context, required this.label, required this.value});
 
   @override
-  Widget build(BuildContext _) { // Use the passed context
+  Widget build(BuildContext _) { 
     final textColor = Theme.of(context).textTheme.bodyLarge?.color;
     
     return Padding(

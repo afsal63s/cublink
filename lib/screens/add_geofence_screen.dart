@@ -1,3 +1,4 @@
+import 'package:cublink/providers/geofence_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -17,6 +18,7 @@ class AddGeofenceScreen extends StatefulWidget {
 }
 
 class _AddGeofenceScreenState extends State<AddGeofenceScreen> {
+  final _formKey = GlobalKey<FormState>();
   final MapController _mapController = MapController();
   final TextEditingController _nameController = TextEditingController();
   
@@ -173,18 +175,31 @@ class _AddGeofenceScreenState extends State<AddGeofenceScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // DYNAMIC TEXT FIELD
-                  TextField(
-                    controller: _nameController,
-                    style: TextStyle(color: textColor), // Prevents transparent typing
-                    decoration: InputDecoration(
-                      labelText: "Zone Name (e.g. School, Home)",
-                      labelStyle: TextStyle(color: isDark ? Colors.white54 : Colors.grey[600]),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: BorderSide.none, // Cleaner look
+                  Form(
+                    key: _formKey,
+                    child: TextFormField(
+                      controller: _nameController,
+                      style: TextStyle(color: textColor), // Prevents transparent typing
+                      decoration: InputDecoration(
+                        labelText: "Zone Name (e.g. School, Home)",
+                        labelStyle: TextStyle(color: isDark ? Colors.white54 : Colors.grey[600]),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: BorderSide.none, // Cleaner look
+                        ),
+                        filled: true,
+                        fillColor: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey[100],
                       ),
-                      filled: true,
-                      fillColor: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey[100],
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty){
+                          return "Please enter a name for this zone";
+                        }
+                        final provider = Provider.of<GeofenceProvider>(context, listen: false);
+                        if (provider.isNameDuplicate(value, excludeId: widget.existingZone?['id'])){
+                          return "This name already exists";
+                        }
+                        return null;
+                      },
                     ),
                   ),
                   const SizedBox(height: 15),
@@ -218,7 +233,8 @@ class _AddGeofenceScreenState extends State<AddGeofenceScreen> {
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))
                       ),
                       onPressed: _isLoadingLocation ? null : () {
-                        Map<String, dynamic> returnedZone = {
+                        if (_formKey.currentState!.validate()){
+                          Map<String, dynamic> returnedZone = {
                           "name": _nameController.text.isEmpty ? "New Zone" : _nameController.text,
                           "address": "Custom Location", 
                           "radius": "${_radiusValue.toInt()}m",
@@ -231,6 +247,10 @@ class _AddGeofenceScreenState extends State<AddGeofenceScreen> {
                         };
                         
                         Navigator.pop(context, returnedZone); 
+                        }
+                        else{
+                          debugPrint("Validation failed!");
+                        }
                       },
                       child: Text(
                         widget.existingZone == null ? "Create Zone" : "Update Zone", 

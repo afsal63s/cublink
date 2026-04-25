@@ -8,10 +8,19 @@ class NotificationService {
 
   static Future<void> init() async {
     const AndroidInitializationSettings androidSettings = 
-        AndroidInitializationSettings('app_logo'); 
+        AndroidInitializationSettings('app_logo');
+
+    const DarwinInitializationSettings initializationSettingsDarwin =
+              DarwinInitializationSettings(
+            requestAlertPermission: true,
+            requestBadgePermission: true,
+            requestSoundPermission: true,
+          ); 
 
     const InitializationSettings settings = 
-        InitializationSettings(android: androidSettings);
+        InitializationSettings(
+          android: androidSettings,
+          iOS: initializationSettingsDarwin);
 
     await _notifications.initialize(
       settings: settings, // <--- Using your correct named parameter syntax

@@ -198,4 +198,11 @@ class GeofenceProvider with ChangeNotifier {
       await _userRef!.child(id).update({'isActive': false});
     }
   }
+  bool isNameDuplicate(String name, {String? excludeId}){
+    return _geofences.any((geo) =>
+      geo.name.toLowerCase() == name.trim().toLowerCase() &&
+      geo.id != excludeId
+    );
+  }
 }
+

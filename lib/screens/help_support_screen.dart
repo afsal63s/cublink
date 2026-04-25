@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart'; 
 import 'package:cublink/widgets/background_wave_painter.dart'; 
-import 'package:provider/provider.dart'; // 🔥 NEEDED FOR THEME
-import 'package:cublink/providers/theme_provider.dart'; // 🔥 NEEDED FOR THEME
+import 'package:provider/provider.dart'; 
+import 'package:cublink/providers/theme_provider.dart'; 
 
 class HelpSupportScreen extends StatelessWidget {
   const HelpSupportScreen({super.key});
@@ -37,7 +37,6 @@ class HelpSupportScreen extends StatelessWidget {
     // 🔥 GRAB THE THEME
     final themeProvider = context.watch<ThemeProvider>();
     final isDark = themeProvider.isDarkMode;
-    final textColor = Theme.of(context).textTheme.bodyLarge?.color;
 
     return Scaffold(
       body: Stack(
@@ -72,15 +71,18 @@ class HelpSupportScreen extends StatelessWidget {
           SafeArea(
             child: Column(
               children: [
-                // --- CUSTOM HEADER ---
+                // --- CUSTOM HEADER (FIXED ALIGNMENT) ---
                 Padding(
-                  padding: const EdgeInsets.only(left: 10, right: 20, top: 10, bottom: 10),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                  child: Stack(
+                    alignment: Alignment.center,
                     children: [
-                      IconButton(
-                        icon: Icon(Icons.arrow_circle_left, color: isDark ? Colors.white54 : Colors.black54, size: 40),
-                        onPressed: () => Navigator.pop(context),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: IconButton(
+                          icon: Icon(Icons.arrow_circle_left, color: isDark ? Colors.white54 : Colors.black54, size: 40),
+                          onPressed: () => Navigator.pop(context),
+                        ),
                       ),
                       
                       Text(
@@ -92,8 +94,6 @@ class HelpSupportScreen extends StatelessWidget {
                           color: Theme.of(context).colorScheme.primary, // DYNAMIC
                         ),
                       ),
-                      
-                      const SizedBox(width: 56), 
                     ],
                   ),
                 ),
@@ -202,7 +202,7 @@ class HelpSupportScreen extends StatelessWidget {
     );
   }
 
-  // --- Upgraded Helper Widget for FAQ ---
+  // --- Helper Widget for FAQ ---
   Widget _buildFAQItem(BuildContext context, String question, String answer, bool isDark) {
     return Container(
       margin: const EdgeInsets.only(bottom: 15),
@@ -235,7 +235,7 @@ class HelpSupportScreen extends StatelessWidget {
     );
   }
 
-  // --- Helper Widget for Contact Rows ---
+  // --- Helper Widget for Contact Rows (NOW WITH EXPANDED FIX) ---
   Widget _buildContactRow(BuildContext context, {required IconData icon, required String text, required VoidCallback onTap, required bool isDark}) {
     return InkWell( 
       onTap: onTap,
@@ -253,15 +253,21 @@ class HelpSupportScreen extends StatelessWidget {
               child: Icon(icon, color: Theme.of(context).colorScheme.primary, size: 22),
             ),
             const SizedBox(width: 15),
-            Text(
-              text,
-              style: TextStyle(
-                fontSize: 15, 
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).textTheme.bodyLarge?.color, 
+            
+            // 🔥 THE FIX: Text is wrapped in Expanded so it flexes instead of breaking the box
+            Expanded(
+              child: Text(
+                text,
+                style: TextStyle(
+                  fontSize: 15, 
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).textTheme.bodyLarge?.color, 
+                ),
+                overflow: TextOverflow.ellipsis,
               ),
             ),
-            const Spacer(),
+            
+            const SizedBox(width: 10),
             Icon(Icons.arrow_outward_rounded, size: 18, color: isDark ? Colors.white24 : Colors.black26),
           ],
         ),
