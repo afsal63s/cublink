@@ -61,7 +61,7 @@ class StudentProvider extends ChangeNotifier {
         notifyListeners(); 
       }
     }, onError: (Object error) {
-        // 🛑 SILENTLY CATCH ERRORS (Prevents Crash on Logout)
+        // SILENTLY CATCH ERRORS (Prevents Crash on Logout)
         debugPrint("⚠️ StudentProvider Stream Error (Safe to ignore): $error");
     });
   }
@@ -93,55 +93,68 @@ class StudentProvider extends ChangeNotifier {
     File? newImageFile, 
   }) async {
     final String? uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) return;
+    if (uid == null) throw Exception("User not logged in");
 
     final DatabaseReference userRef = FirebaseDatabase.instanceFor(
       app: Firebase.app(),
       databaseURL: 'https://clublink-2bbc3-default-rtdb.asia-southeast1.firebasedatabase.app'
     ).ref('users/$uid/student_info');
 
-    // 1. Upload Image (if changed)
+    String? newImageUrl;
+
+    // 1. Upload Image FIRST
     if (newImageFile != null) {
-      try {
-        final storage = FirebaseStorage.instanceFor(
-          bucket: 'gs://clublink-2bbc3.firebasestorage.app'
-        );
-        final storageRef = storage.ref().child('users/$uid/profile.jpg');
-        await storageRef.putFile(newImageFile);
-        String downloadUrl = await storageRef.getDownloadURL();
-        await userRef.update({'profile_image': downloadUrl});
-      } catch (e) {
-        debugPrint("❌ Error uploading image: $e");
-      }
+      final storage = FirebaseStorage.instanceFor(
+        bucket: 'gs://clublink-2bbc3.firebasestorage.app'
+      );
+      final storageRef = storage.ref().child('users/$uid/profile.jpg');
+      
+      // If this fails (e.g., due to Firebase Storage Rules), the function stops here 
+      // and throws the error back to the UI screen.
+      await storageRef.putFile(newImageFile);
+      newImageUrl = await storageRef.getDownloadURL();
     }
 
-    // 2. Update Text Fields
-    await userRef.update({
+    // 2. Update Database ONLY if storage succeeded (or if no image was picked)
+    Map<String, dynamic> updates = {
       'name': newName,
       'guardian': newGuardian,
       'contact': newPhone,
-    });
+    };
+    
+    // Add the image URL to the update packet only if we successfully uploaded a new one
+    if (newImageUrl != null) {
+      updates['profile_image'] = newImageUrl;
+    }
+
+    await userRef.update(updates);
   }
 
   // --- REMOVE IMAGE ---
   Future<void> removeProfileImage() async {
     final String? uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) return;
+    if (uid == null) throw Exception("User not logged in");
 
     final userRef = FirebaseDatabase.instanceFor(
       app: Firebase.app(),
       databaseURL: 'https://clublink-2bbc3-default-rtdb.asia-southeast1.firebasedatabase.app'
     ).ref('users/$uid/student_info');
 
+    final storage = FirebaseStorage.instanceFor(
+      bucket: 'gs://clublink-2bbc3.firebasestorage.app'
+    );
+    
     try {
-      final storage = FirebaseStorage.instanceFor(
-          bucket: 'gs://clublink-2bbc3.firebasestorage.app'
-      );
+      // Attempt to delete the file
       await storage.ref().child('users/$uid/profile.jpg').delete();
-    } catch (e) {
-      debugPrint("⚠️ Image delete skipped");
+    } on FirebaseException catch (e) {
+      // If the error is simply that the file doesn't exist, ignore it and proceed to clear DB
+      if (e.code != 'object-not-found') {
+        rethrow; // If it's a permission error, STOP and throw to the UI
+      }
     }
 
+    // Clear the DB only if the file was deleted (or didn't exist anyway)
     await userRef.update({'profile_image': ""});
     profileImageUrl = ""; 
     notifyListeners();

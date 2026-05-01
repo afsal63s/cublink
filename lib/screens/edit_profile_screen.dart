@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:cublink/providers/student_provider.dart'; 
-import 'package:cublink/providers/theme_provider.dart'; // 🔥 NEEDED FOR THEME
-import 'package:cublink/widgets/background_wave_painter.dart'; // 🔥 NEEDED FOR WAVES
+import 'package:cublink/providers/theme_provider.dart'; 
+import 'package:cublink/widgets/background_wave_painter.dart'; 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
@@ -36,7 +36,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: isDark ? const Color(0xFF1E2D2A) : Colors.white, // DYNAMIC
+      backgroundColor: isDark ? const Color(0xFF1E2D2A) : Colors.white, 
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -98,39 +98,60 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   }
 
   Future<void> _removePhoto() async {
-    setState(() {
-      _pickedImage = null;
-    });
+    setState(() => _isLoading = true);
 
     try {
       await Provider.of<StudentProvider>(context, listen: false).removeProfileImage();
+      setState(() {
+        _pickedImage = null; // Clear local picked image on success
+      });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Profile photo removed")),
         );
       }
     } catch (e) {
-      debugPrint("Error removing photo: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Failed to remove photo. Check connection or permissions."),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
   Future<void> _saveProfile() async {
     setState(() => _isLoading = true);
 
-    await Provider.of<StudentProvider>(context, listen: false).updateProfile(
-      newName: _nameController.text.trim(),
-      newGuardian: _guardianController.text.trim(),
-      newPhone: _phoneController.text.trim(),
-      newImageFile: _pickedImage,
-    );
-
-    setState(() => _isLoading = false);
-
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Profile Updated Successfully!")),
+    try {
+      await Provider.of<StudentProvider>(context, listen: false).updateProfile(
+        newName: _nameController.text.trim(),
+        newGuardian: _guardianController.text.trim(),
+        newPhone: _phoneController.text.trim(),
+        newImageFile: _pickedImage,
       );
-      Navigator.pop(context); 
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Profile Updated Successfully!")),
+        );
+        Navigator.pop(context); 
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Failed to update profile. Check connection or permissions."),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -144,12 +165,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     var width = MediaQuery.of(context).size.width;
 
     return Scaffold(
-      extendBodyBehindAppBar: true, // 🔥 Let gradient flow behind AppBar
+      extendBodyBehindAppBar: true, 
       appBar: AppBar(
         title: const Text("Edit Profile", style: TextStyle(fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.transparent, // DYNAMIC
+        backgroundColor: Colors.transparent, 
         elevation: 0,
-        foregroundColor: Theme.of(context).textTheme.bodyLarge?.color, // DYNAMIC
+        foregroundColor: Theme.of(context).textTheme.bodyLarge?.color, 
       ),
       body: Stack(
         children: [
@@ -219,7 +240,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         Container(
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
-                            color: isDark ? Theme.of(context).colorScheme.primary : Colors.black, // DYNAMIC
+                            color: isDark ? Theme.of(context).colorScheme.primary : Colors.black, 
                             shape: BoxShape.circle,
                             border: Border.all(color: isDark ? const Color(0xFF1E2D2A) : Colors.white, width: 3),
                           ),
@@ -273,7 +294,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   Widget _buildTextField(String label, TextEditingController controller, IconData icon, bool isDark) {
     return Container(
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface, // DYNAMIC
+        color: Theme.of(context).colorScheme.surface, 
         borderRadius: BorderRadius.circular(30),
         boxShadow: [
           BoxShadow(
